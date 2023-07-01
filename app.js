@@ -119,36 +119,48 @@ app.delete("/todos/:todoId/", async (request, response) => {
   response.send("Todo Deleted");
 });
 
-const gotOnlystatus = (requestQuery) => {
-  return status !== undefined && priority == undefined && todo == undefined;
-};
-const gotOnlypriority = (requestQuery) => {
-  return status == undefined && priority !== undefined && todo == undefined;
-};
-const gotOnlytodo = (requestQuery) => {
-  return status == undefined && priority == undefined && todo !== undefined;
-};
-
-app.put("/todos/:todoId", async (request, response) => {
+app.put("/todos/:todoId/", async (request, response) => {
   const { todoId } = request.params;
-  const updateQuery = "";
-  const message = "";
+  let updateColumn = "";
+  const requestBody = request.body;
   switch (true) {
-    case gotOnlypriority(request.query):
-      updateQuery = `UPDATE todo SET priority='${priority}' WHERE id=${todoId};`;
-      message = "Priority Updated";
+    case requestBody.status !== undefined:
+      updateColumn = "Status";
       break;
-    case gotOnlystatus(request.query):
-      updateQuery = `UPDATE todo SET status='${status}' WHERE id=${todoId};`;
-      message = "Status Updated";
+    case requestBody.priority !== undefined:
+      updateColumn = "Priority";
       break;
-    case gotOnlytodo(request.query):
-      updateQuery = `UPDATE todo SET todo='${todo}' WHERE id=${todoId};`;
-      message = "Todo Updated";
+    case requestBody.todo !== undefined:
+      updateColumn = "Todo";
       break;
   }
-  await db.run(updateQuery);
-  response.send(message);
+  const previousTodoQuery = `
+    SELECT
+      *
+    FROM
+      todo
+    WHERE 
+      id = ${todoId};`;
+  const previousTodo = await database.get(previousTodoQuery);
+
+  const {
+    todo = previousTodo.todo,
+    priority = previousTodo.priority,
+    status = previousTodo.status,
+  } = request.body;
+
+  const updateTodoQuery = `
+    UPDATE
+      todo
+    SET
+      todo='${todo}',
+      priority='${priority}',
+      status='${status}'
+    WHERE
+      id = ${todoId};`;
+
+  await database.run(updateTodoQuery);
+  response.send(`${updateColumn} Updated`);
 });
 
 module.exports = app;
