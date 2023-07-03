@@ -141,7 +141,7 @@ app.put("/todos/:todoId/", async (request, response) => {
       todo
     WHERE 
       id = ${todoId};`;
-  const previousTodo = await database.get(previousTodoQuery);
+  const previousTodo = await db.get(previousTodoQuery);
 
   const {
     todo = previousTodo.todo,
@@ -159,7 +159,7 @@ app.put("/todos/:todoId/", async (request, response) => {
     WHERE
       id = ${todoId};`;
 
-  await database.run(updateTodoQuery);
+  await db.run(updateTodoQuery);
   response.send(`${updateColumn} Updated`);
 });
 
